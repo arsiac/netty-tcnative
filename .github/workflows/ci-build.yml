@@ -43,6 +43,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y gcc make perl
 
+      - uses: actions/cache@v3
+        with:
+          path: ~/.m2/repository
+          key: build-linux-m2-repository-cache-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            build-linux-m2-repository-cache-
+
       - name: Build netty-tcnative
         run: chmod +x ./mvnw && ./mvnw clean package
 
