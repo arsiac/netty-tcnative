@@ -36,19 +36,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           java-version: 8
-          distribution: zulu
-
-      - name: Configuring Linux Environment
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gcc make perl
-
-      - uses: actions/cache@v3
-        with:
-          path: ~/.m2/repository
-          key: build-linux-m2-repository-cache-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            build-linux-m2-repository-cache-
+          distribution: temurin
 
       - name: Build netty-tcnative
         run: chmod +x ./mvnw && ./mvnw clean package
@@ -70,10 +58,7 @@ jobs:
 
   # Windows
   build-windows:
-    strategy:
-      matrix:
-        arch: [ windows-2025, windows11-arm ]
-    runs-on: ${{ matrix.arch }}
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -81,7 +66,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           java-version: 8
-          distribution: zulu
+          distribution: temurin
 
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v2
@@ -95,15 +80,6 @@ jobs:
         uses: crazy-max/ghaction-chocolatey@v3
         with:
           args: install ninja nasm
-
-      # Cache .m2/repository
-      - uses: actions/cache@v4
-        continue-on-error: true
-        with:
-          path: ~/.m2/repository
-          key: build-windows-m2-repository-cache-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            build-windows-m2-repository-cache-
 
       - name: Build netty-tcnative
         run: ./mvnw.cmd clean package
