@@ -52,7 +52,7 @@ RUN curl -s https://cmake.org/files/v$CMAKE_VERSION_BASE/cmake-$CMAKE_VERSION-li
     && mv cmake-$CMAKE_VERSION-linux-x86_64 /opt/ \
     && echo 'PATH=/opt/cmake-$CMAKE_VERSION-linux-x86_64/bin:$PATH' >> ~/.bashrc
 
-RUN yum install -y centos-release-scl
+RUN yum -y install centos-release-scl-rh
 # Update repository urls as we need to use the vault now.
 RUN sed -i 's|^mirrorlist=|#mirrorlist=|g' /etc/yum.repos.d/CentOS-SCLo-scl-rh.repo
 RUN sed -i 's|^#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-SCLo-scl-rh.repo
