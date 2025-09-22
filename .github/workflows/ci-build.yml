@@ -44,7 +44,7 @@ jobs:
           sudo apt-get install -y gcc make perl
 
       - name: Build netty-tcnative
-        run: ./mvnw clean package
+        run: chmod +x ./mvnw && ./mvnw clean package
 
       - uses: actions/upload-artifact@v4
         if: ${{ always() }}
