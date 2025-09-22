@@ -24,7 +24,7 @@ concurrency:
 
 jobs:
   # Linux
-  build-linux-x86_64:
+  build-linux:
     strategy:
       matrix:
         arch: [ ubuntu-24.04, ubuntu-24.04-arm]
@@ -69,7 +69,7 @@ jobs:
             **/hs_err*.log
 
   # Windows
-  build-windows-x86_64:
+  build-windows:
     strategy:
       matrix:
         arch: [ windows-2025, windows11-arm ]
