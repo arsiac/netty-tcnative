@@ -26,8 +26,6 @@ jobs:
   # Linux
   build-linux:
     runs-on: ubuntu-24.04
-    container:
-      image: centos:7
     strategy:
       fail-fast: false
       matrix:
@@ -40,52 +38,65 @@ jobs:
       CLASSIFIER: linux-${{ matrix.arch }}
     steps:
 
-      - name: Fix CentOS 7 mirror
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Initialize CentOS 7 Builder
         run: |
+          docker run -d \
+            --name centos7-builder \
+            -e CC=${{ env.CC }} \
+            -e CXX=${{ env.CXX }} \
+            -e AR=${{ env.AR }} \
+            -e STRIP=${{ env.STRIP }} \
+            -e CLASSIFIER=${{ env.CLASSIFIER }} \
+            -v $(pwd):/project \
+            centos:7
+          
+          cat > initialize.sh << EOF
+          #!/bin/bash
           sed -i 's|^mirrorlist=|#mirrorlist=|g' /etc/yum.repos.d/CentOS-*.repo
           sed -i 's|^#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' \
             /etc/yum.repos.d/CentOS-*.repo
           yum clean all
           yum makecache -y
-
-      - name: Install tools
-        run: |
+          
           yum -y groupinstall "Development Tools"
           yum -y install epel-release
           yum -y install apr-devel openssl-devel cmake3 ninja-build git which
           yum -y install java-11-openjdk-devel
           ln -sf /usr/bin/cmake3 /usr/bin/cmake
-
-      - name: Install scl-rh
-        run: |
+          
           yum -y install centos-release-scl-rh
           sed -i 's|^mirrorlist=|#mirrorlist=|g' /etc/yum.repos.d/CentOS-SCLo-scl-rh.repo
           sed -i 's|^#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' \
             /etc/yum.repos.d/CentOS-SCLo-scl-rh.repo
           yum clean all
           yum makecache -y
+          EOF
+          
+          docker exec centos7-builder bash -c "$(cat initialize.sh)"
 
       - name: Install cross toolchain (arm64 only)
         if: matrix.arch == 'aarch64'
         run: |
-          yum -y install gcc-aarch64-linux-gnu gcc-c++-aarch64-linux-gnu
+          docker exec centos7-builder bash -c \
+            "yum -y install gcc-aarch64-linux-gnu gcc-c++-aarch64-linux-gnu"
 
-      - name: Checkout code
-        uses: actions/checkout@v3
 
       - name: Build netty-tcnative
         run: |
-          chmod +x ./mvnw \
-            && ./mvnw clean package -DskipTests -Dclassifier=${{ env.CLASSIFIER }}
+          docker exec centos7-builder bash -c \
+            "chmod +x ./mvnw && ./mvnw clean package -DskipTests -Dclassifier=${{ env.CLASSIFIER }}"
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: ${{ always() }}
         with:
           name: build-${{ matrix.arch }}-jars
           path: |
             **/target/*.jar
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: ${{ failure() }}
         with:
           name: build-${{ matrix.arch }}-target
