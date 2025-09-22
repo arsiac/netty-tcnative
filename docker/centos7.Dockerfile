@@ -33,6 +33,7 @@ RUN yum install -y \
     perl \
     perl-parent \
     perl-devel \
+    perl-IPC-Cmd \
     tar \
     unzip \
     wget \

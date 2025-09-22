@@ -42,7 +42,8 @@ RUN  set -x && \
      which \
      perl \
      perl-parent \
-     perl-devel
+     perl-devel \
+     perl-IPC-Cmd
 
 # Install Java
 RUN yum install -y java-1.8.0-openjdk-devel golang
