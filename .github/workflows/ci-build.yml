@@ -39,6 +39,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Make scripts executable
+        run: |
+          chmod +x .github/scripts/*.sh
+          chmod +x mvnw
+
       # Cache .m2/repository
       - uses: actions/cache@v4
         continue-on-error: true
@@ -55,9 +60,7 @@ jobs:
         run: docker compose ${{ matrix.docker-compose-run }} | tee build.output
 
       - name: Checking for test failures
-        run: |
-          chmod +x ./.github/scripts/check_build_result.sh
-          ./.github/scripts/check_build_result.sh build.output
+        run: .github/scripts/check_build_result.sh build.output
 
       - uses: actions/upload-artifact@v4
         if: ${{ always() }}
