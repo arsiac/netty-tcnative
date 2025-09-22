@@ -1,6 +1,9 @@
 FROM --platform=linux/amd64 centos:7.6.1810
 
+ARG openssl_version=3.0.17
+
 ENV SOURCE_DIR /root/source
+ENV OPENSSL_VERSION $openssl_version
 ENV CMAKE_VERSION_BASE 3.26
 ENV CMAKE_VERSION $CMAKE_VERSION_BASE.4
 ENV NINJA_VERSION 1.7.2
