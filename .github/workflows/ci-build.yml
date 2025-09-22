@@ -1,9 +1,9 @@
-name: Build
+name: Build project
 
 on:
   push:
-    tags:
-      - 'v*'
+    tags: ['v*']
+  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 permissions:
@@ -24,40 +24,51 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         include:
           - setup: centos6-x86_64
             docker-compose-build: "-f docker/docker-compose.centos-6.yaml -f docker/docker-compose.centos-6.18.yaml build"
             docker-compose-run: "-f docker/docker-compose.centos-6.yaml -f docker/docker-compose.centos-6.18.yaml run build"
-          - setup: debian7-x86_64
-            docker-compose-build: "-f docker/docker-compose.debian.yaml -f docker/docker-compose.debian-7.18.yaml build"
-            docker-compose-run: "-f docker/docker-compose.debian.yaml -f docker/docker-compose.debian-7.18.yaml run build"
+#          - setup: debian7-x86_64
+#            docker-compose-build: "-f docker/docker-compose.debian.yaml -f docker/docker-compose.debian-7.18.yaml build"
+#            docker-compose-run: "-f docker/docker-compose.debian.yaml -f docker/docker-compose.debian-7.18.yaml run build"
           - setup: centos7-aarch64
             docker-compose-build: "-f docker/docker-compose.centos-7.yaml build"
             docker-compose-run: "-f docker/docker-compose.centos-7.yaml run cross-compile-aarch64-build"
+#          - setup: al2023-x86_64-aws_lc
+#            docker-compose-build: "-f docker/docker-compose.al2023.yaml build"
+#            docker-compose-run: "-f docker/docker-compose.al2023.yaml run build"
 
     name: ${{ matrix.setup }}
     steps:
       - uses: actions/checkout@v4
 
-      # Enable caching of Docker layers
-      - uses: satackey/action-docker-layer-caching@v0.0.11
+      # Cache .m2/repository
+      - uses: actions/cache@v4
         continue-on-error: true
         with:
-          key: build-${{ matrix.setup }}-docker-cache-{hash}
+          path: ~/.m2/repository
+          key: build-${{ matrix.setup }}-m2-repository-cache-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
-            build-${{ matrix.setup }}-docker-cache-
+            build-${{ matrix.setup }}-m2-repository-cache-
 
       - name: Build docker image
-        run: docker-compose ${{ matrix.docker-compose-build }}
+        run: docker compose ${{ matrix.docker-compose-build }}
 
       - name: Build project
-        run: docker-compose ${{ matrix.docker-compose-run }} | tee build.output
+        run: docker compose ${{ matrix.docker-compose-run }} | tee build.output
 
       - name: Checking for test failures
         run: ./.github/scripts/check_build_result.sh build.output
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ always() }}
+        with:
+          name: build-${{ matrix.setup }}-jars
+          path: |
+            **/target/*.jar
 
       - uses: actions/upload-artifact@v4
         if: ${{ failure() }}
@@ -67,12 +78,10 @@ jobs:
             **/target/surefire-reports/
             **/hs_err*.log
 
-  # Windows
+
   build-windows:
-    strategy:
-      matrix:
-        arch: [ windows-2025 ]
-    runs-on: ${{ matrix.arch }}
+    runs-on: windows-2022
+    name: windows-x86_64
     steps:
       - uses: actions/checkout@v4
 
@@ -80,7 +89,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           java-version: 8
-          distribution: temurin
+          distribution: zulu
 
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v2
@@ -95,25 +104,34 @@ jobs:
         with:
           args: install ninja nasm openssl
 
+      # Cache .m2/repository
+      - uses: actions/cache@v4
+        continue-on-error: true
+        with:
+          path: ~/.m2/repository
+          key: build-windows-m2-repository-cache-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            build-windows-m2-repository-cache-
+
       - name: Set up Environment Variables
         run: |
           echo "OPENSSL_INCLUDE_DIR=C:\Program Files\OpenSSL\include" >> $env:GITHUB_ENV
           echo "OPENSSL_LIB_DIR=C:\Program Files\OpenSSL\lib\VC\x64\MD" >> $env:GITHUB_ENV
 
       - name: Build netty-tcnative
-        run: ./mvnw.cmd clean package
+        run: ./mvnw.cmd --file pom.xml -am clean package
 
       - uses: actions/upload-artifact@v4
         if: ${{ always() }}
         with:
-          name: build-${{ matrix.arch }}-jars
+          name: build-windows-jars
           path: |
             **/target/*.jar
 
       - uses: actions/upload-artifact@v4
         if: ${{ failure() }}
         with:
-          name: build-${{ matrix.arch }}-target
+          name: build-windows-target
           path: |
             **/target/surefire-reports/
             **/hs_err*.log

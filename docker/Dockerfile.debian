@@ -1,5 +1,5 @@
 ARG debian_version=7
-FROM debian:$debian_version
+FROM --platform=linux/amd64 debian:$debian_version
 # needed to do again after FROM due to docker limitation
 ARG debian_version
 
@@ -9,6 +9,9 @@ ENV CMAKE_VERSION $CMAKE_VERSION_BASE.2
 ENV NINJA_VERSION 1.7.2
 ENV GO_VERSION 1.9.3
 ENV GCC_VERSION 4.9.4
+
+ARG java_version="8.0.302-zulu"
+ENV JAVA_VERSION $java_version
 
 # install dependencies
 RUN echo "deb http://archive.debian.org/debian/ wheezy contrib main non-free" > /etc/apt/sources.list && \
@@ -24,6 +27,7 @@ RUN echo "deb http://archive.debian.org/debian/ wheezy contrib main non-free" > 
  git \
  gnupg \
  g++ \
+ libapr1-dev \
  libssl1.0.0=1.0.1e-2+deb7u20 \
  libssl-dev \
  libtool \
@@ -52,10 +56,12 @@ RUN wget -q --no-check-certificate https://github.com/netty/netty-tcnative/relea
 RUN rm -rf $SOURCE_DIR
 
 # Downloading and installing SDKMAN!
+RUN echo '-k' > $HOME/.curlrc
 RUN curl -s "https://get.sdkman.io" | bash
+RUN rm $HOME/.curlrc
 
-ARG java_version="8.0.302-zulu"
-ENV JAVA_VERSION $java_version
+# Don't check the certificates as our curl version is too old.
+RUN echo 'sdkman_insecure_ssl=true' >> $HOME/.sdkman/etc/config
 
 # Installing Java removing some unnecessary SDKMAN files
 RUN bash -c "source $HOME/.sdkman/bin/sdkman-init.sh && \
@@ -63,8 +69,12 @@ RUN bash -c "source $HOME/.sdkman/bin/sdkman-init.sh && \
     rm -rf $HOME/.sdkman/archives/* && \
     rm -rf $HOME/.sdkman/tmp/*"
 
+
 RUN echo 'export JAVA_HOME="/root/.sdkman/candidates/java/current"' >> ~/.bashrc
 RUN echo 'PATH=$JAVA_HOME/bin:$PATH' >> ~/.bashrc
 
 # Prepare our own build
 ENV JAVA_HOME /jdk/
+
+## Cleanup
+RUN apt-get clean
