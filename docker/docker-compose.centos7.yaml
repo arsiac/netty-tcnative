@@ -3,13 +3,13 @@ version: "3"
 services:
 
   runtime-setup:
-    image: netty-tcnative-debian:default
+    image: netty-tcnative-centos:default
     build:
-      context: ..
-      dockerfile: docker/Dockerfile.debian
+      context: ../
+      dockerfile: docker/centos7.Dockerfile
 
   common: &common
-    image: netty-tcnative-debian:default
+    image: netty-tcnative-centos:default
     depends_on: [runtime-setup]
     environment:
       - GPG_KEYNAME
@@ -18,28 +18,18 @@ services:
       - MAVEN_OPTS
     volumes:
       - ~/.ssh:/root/.ssh:delegated
-      - ~/.gnupg:/root/.gnupg:delegated
       - ~/.m2/repository:/root/.m2/repository
+      - ~/.gnupg:/root/.gnupg:delegated
       - ..:/code:delegated
     working_dir: /code
+
+  build-clean:
+    <<: *common
+    command: /bin/bash -cl "./mvnw clean package"
 
   build:
     <<: *common
     command: /bin/bash -cl "./mvnw clean package"
-
-  deploy-dynamic-only:
-    <<: *common
-    volumes:
-      - ~/.ssh:/root/.ssh
-      - ~/.gnupg:/root/.gnupg
-      - ~/.m2/repository:/root/.m2/repository
-      - ~/.m2/settings.xml:/root/.m2/settings.xml
-      - ..:/code
-    command: /bin/bash -cl "./mvnw -am clean deploy -DskipTests=true"
-
-  build-dynamic-only:
-    <<: *common
-    command: /bin/bash -cl "./mvnw -am clean package"
 
   stage-snapshot:
     <<: *common
@@ -53,10 +43,6 @@ services:
 
   stage-release:
     <<: *common
-    environment:
-      - GPG_KEYNAME
-      - GPG_PASSPHRASE
-      - GPG_PRIVATE_KEY
     volumes:
       - ~/.ssh:/root/.ssh
       - ~/.m2/repository:/root/.m2/repository
@@ -65,12 +51,23 @@ services:
       - ..:/code
     command: /bin/bash -cl "cat <(echo -e \"${GPG_PRIVATE_KEY}\") | gpg --batch --import && ./mvnw -B -Pstage -am clean javadoc:jar package gpg:sign org.sonatype.central:central-publishing-maven-plugin:publish -DskipTests=true -Dgpg.passphrase=${GPG_PASSPHRASE} -Dgpg.keyname=${GPG_KEYNAME}"
 
+  deploy:
+    <<: *common
+    volumes:
+      - ~/.ssh:/root/.ssh
+      - ~/.gnupg:/root/.gnupg
+      - ~/.m2/repository:/root/.m2/repository
+      - ~/.m2/settings.xml:/root/.m2/settings.xml
+      - ..:/code
+    command: /bin/bash -cl "./mvnw clean deploy -DskipTests=true"
+
   shell:
     <<: *common
     volumes:
       - ~/.ssh:/root/.ssh:delegated
       - ~/.gnupg:/root/.gnupg:delegated
-      - ~/.m2:/root/.m2:delegated
+      - ~/.m2/repository:/root/.m2/repository
+      - ~/.m2/settings.xml:/root/.m2/settings.xml
       - ~/.gitconfig:/root/.gitconfig:delegated
       - ~/.gitignore:/root/.gitignore:delegated
       - ..:/code:delegated

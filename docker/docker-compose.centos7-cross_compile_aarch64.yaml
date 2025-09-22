@@ -6,7 +6,7 @@ services:
     image: netty-tcnative-centos:cross_compile_aarch64
     build:
       context: ../
-      dockerfile: docker/Dockerfile.cross_compile_aarch64
+      dockerfile: docker/centos7-cross_compile_aarch64.Dockerfile
       args:
         gcc_version: "10.2-2020.11"
         apr_version: "1.7.6"

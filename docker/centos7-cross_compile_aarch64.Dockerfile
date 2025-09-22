@@ -1,7 +1,7 @@
 FROM --platform=linux/amd64 centos:7.6.1810
 
 ARG gcc_version=10.2-2020.11
-ARG openssl_version=1_1_1d
+ARG openssl_version=3.0.17
 ARG apr_version=1.7.6
 ENV SOURCE_DIR /root/source
 ENV GCC_VERSION $gcc_version
@@ -15,7 +15,9 @@ RUN mkdir $SOURCE_DIR
 WORKDIR $SOURCE_DIR
 
 # Update to use the vault
-RUN sed -i -e 's/^mirrorlist/#mirrorlist/g' -e 's/^#baseurl=http:\/\/mirror.centos.org\/centos\/$releasever\//baseurl=https:\/\/linuxsoft.cern.ch\/centos-vault\/\/7.6.1810\//g' /etc/yum.repos.d/CentOS-Base.repo
+RUN sed -i -e 's/^mirrorlist/#mirrorlist/g' \
+    -e 's/^#baseurl=http:\/\/mirror.centos.org\/centos\/$releasever\//baseurl=https:\/\/linuxsoft.cern.ch\/centos-vault\/\/7.6.1810\//g' \
+    /etc/yum.repos.d/CentOS-Base.repo
 
 # We want to have git 2.x for the maven scm plugin and also for boringssl
 RUN yum install -y http://opensource.wandisco.com/centos/6/git/x86_64/wandisco-git-release-6-1.noarch.rpm
@@ -59,7 +61,11 @@ RUN set -x && \
   popd
 
 # Install cmake
-RUN curl -s https://cmake.org/files/v$CMAKE_VERSION_BASE/cmake-$CMAKE_VERSION-linux-x86_64.tar.gz --output cmake-$CMAKE_VERSION-linux-x86_64.tar.gz && tar zvxf cmake-$CMAKE_VERSION-linux-x86_64.tar.gz && mv cmake-$CMAKE_VERSION-linux-x86_64 /opt/ && echo 'PATH=/opt/cmake-$CMAKE_VERSION-linux-x86_64/bin:$PATH' >> ~/.bashrc
+RUN curl -s https://cmake.org/files/v$CMAKE_VERSION_BASE/cmake-$CMAKE_VERSION-linux-x86_64.tar.gz \
+    --output cmake-$CMAKE_VERSION-linux-x86_64.tar.gz \
+    && tar zvxf cmake-$CMAKE_VERSION-linux-x86_64.tar.gz \
+    && mv cmake-$CMAKE_VERSION-linux-x86_64 /opt/ \
+    && echo 'PATH=/opt/cmake-$CMAKE_VERSION-linux-x86_64/bin:$PATH' >> ~/.bashrc
 
 # Downloading and installing SDKMAN!
 RUN curl -s "https://get.sdkman.io" | bash
@@ -75,7 +81,6 @@ RUN bash -c "source $HOME/.sdkman/bin/sdkman-init.sh && \
 
 # Prepare our own build
 ENV PATH /root/.sdkman/candidates/maven/current:$PATH
-
 
 # Cleanup
 RUN rm -rf $SOURCE_DIR
