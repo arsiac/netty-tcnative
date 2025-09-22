@@ -47,21 +47,24 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: ${{ always() }}
         with:
-          name: build-jars
+          name: build-${{ matrix.arch }}-jars
           path: |
-            **/target/*-linux-*.jar
+            **/target/*.jar
 
       - uses: actions/upload-artifact@v4
         if: ${{ failure() }}
         with:
-          name: build-target
+          name: build-${{ matrix.arch }}-target
           path: |
             **/target/surefire-reports/
             **/hs_err*.log
 
   # Windows
   build-windows:
-    runs-on: windows-latest
+    strategy:
+      matrix:
+        arch: [ windows-2025 ]
+    runs-on: ${{ matrix.arch }}
     steps:
       - uses: actions/checkout@v4
 
@@ -95,14 +98,14 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: ${{ always() }}
         with:
-          name: build-windows-jars
+          name: build-${{ matrix.arch }}-jars
           path: |
-            **/target/*-windows-*.jar
+            **/target/*.jar
 
       - uses: actions/upload-artifact@v4
         if: ${{ failure() }}
         with:
-          name: build-windows-target
+          name: build-${{ matrix.arch }}-target
           path: |
             **/target/surefire-reports/
             **/hs_err*.log
