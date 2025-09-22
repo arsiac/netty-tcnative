@@ -14,29 +14,29 @@ RUN sed -i -e 's/^mirrorlist/#mirrorlist/g' \
 
 # install dependencies
 RUN yum install -y \
- apr-devel \
- autoconf \
- automake \
- bzip2 \
- git \
- glibc-devel \
- gnupg \
- libapr1-dev \
- libtool \
- lsb-core \
- make \
- openssl-devel \
- patch \
- perl \
- perl-parent \
- perl-devel \
- tar \
- unzip \
- wget \
- which \
- zip \
- ninja-build \
- gcc-c++
+    apr-devel \
+    autoconf \
+    automake \
+    bzip2 \
+    git \
+    glibc-devel \
+    gnupg \
+    libapr1-dev \
+    libtool \
+    lsb-core \
+    make \
+    openssl-devel \
+    patch \
+    perl \
+    perl-parent \
+    perl-devel \
+    tar \
+    unzip \
+    wget \
+    which \
+    zip \
+    ninja-build \
+    gcc-c++
 
 RUN mkdir $SOURCE_DIR
 WORKDIR $SOURCE_DIR
