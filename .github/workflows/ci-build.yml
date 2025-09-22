@@ -1,4 +1,4 @@
-name: Build project
+name: Build
 
 on:
   push:
@@ -40,9 +40,9 @@ jobs:
       CLASSIFIER: linux-${{ matrix.arch }}
     steps:
 
-      - name: Fix CentOS 7 mirrorlist
+      - name: Fix CentOS 7 mirror
         run: |
-          sed -i 's|^mirrorlist=|#mirrorlist=|g' /etc/yum.repos.d/CentOS-*.repo && \
+          sed -i 's|^mirrorlist=|#mirrorlist=|g' /etc/yum.repos.d/CentOS-*.repo
           sed -i 's|^#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' \
             /etc/yum.repos.d/CentOS-*.repo
           yum clean all
@@ -52,10 +52,18 @@ jobs:
         run: |
           yum -y groupinstall "Development Tools"
           yum -y install epel-release
-          yum -y install centos-release-scl-rh
           yum -y install apr-devel openssl-devel cmake3 ninja-build git which
           yum -y install java-11-openjdk-devel
           ln -sf /usr/bin/cmake3 /usr/bin/cmake
+
+      - name: Install scl-rh
+        run: |
+          yum -y install centos-release-scl-rh
+          sed -i 's|^mirrorlist=|#mirrorlist=|g' /etc/yum.repos.d/CentOS-SCLo-scl-rh.repo
+          sed -i 's|^#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' \
+            /etc/yum.repos.d/CentOS-SCLo-scl-rh.repo
+          yum clean all
+          yum makecache -y
 
       - name: Install cross toolchain (arm64 only)
         if: matrix.arch == 'aarch64'
