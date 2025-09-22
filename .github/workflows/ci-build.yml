@@ -25,24 +25,42 @@ concurrency:
 jobs:
   # Linux
   build-linux:
+    runs-on: ubuntu-24.04
+    container:
+      image: centos:7
     strategy:
+      fail-fast: false
       matrix:
-        arch: [ ubuntu-24.04, ubuntu-24.04-arm]
-    runs-on: ${{ matrix.arch }}
+        arch: [x86_64, aarch64]
+    env:
+      CC:  ${{ matrix.arch == 'x86_64' && 'gcc'     || 'aarch64-linux-gnu-gcc' }}
+      CXX: ${{ matrix.arch == 'x86_64' && 'g++'     || 'aarch64-linux-gnu-g++' }}
+      AR:  ${{ matrix.arch == 'x86_64' && 'ar'      || 'aarch64-linux-gnu-ar' }}
+      STRIP: ${{ matrix.arch == 'x86_64' && 'strip' || 'aarch64-linux-gnu-strip' }}
+      CLASSIFIER: linux-${{ matrix.arch }}
     steps:
-      - uses: actions/checkout@v4
 
       - name: Install tools
-        run: sudo apt-get update && sudo apt-get install -y gcc make perl openssl
+        run: |
+          yum -y groupinstall "Development Tools"
+          yum -y install epel-release
+          yum -y install centos-release-scl-rh
+          yum -y install apr-devel openssl-devel cmake3 ninja-build git which
+          yum -y install java-11-openjdk-devel
+          ln -sf /usr/bin/cmake3 /usr/bin/cmake
 
-      - name: Set up JDK 8
-        uses: actions/setup-java@v4
-        with:
-          java-version: 8
-          distribution: temurin
+      - name: Install cross toolchain (arm64 only)
+        if: matrix.arch == 'aarch64'
+        run: |
+          yum -y install gcc-aarch64-linux-gnu gcc-c++-aarch64-linux-gnu
+
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Build netty-tcnative
-        run: chmod +x ./mvnw && ./mvnw clean package
+        run: |
+          chmod +x ./mvnw \
+            && ./mvnw clean package -DskipTests -Dclassifier=${{ env.CLASSIFIER }}
 
       - uses: actions/upload-artifact@v4
         if: ${{ always() }}
