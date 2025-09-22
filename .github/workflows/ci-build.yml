@@ -55,7 +55,9 @@ jobs:
         run: docker compose ${{ matrix.docker-compose-run }} | tee build.output
 
       - name: Checking for test failures
-        run: ./.github/scripts/check_build_result.sh build.output
+        run: |
+          chmod +x ./.github/scripts/check_build_result.sh
+          ./.github/scripts/check_build_result.sh build.output
 
       - uses: actions/upload-artifact@v4
         if: ${{ always() }}
