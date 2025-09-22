@@ -71,21 +71,21 @@ jobs:
           yum -y install gcc-aarch64-linux-gnu gcc-c++-aarch64-linux-gnu
 
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
       - name: Build netty-tcnative
         run: |
           chmod +x ./mvnw \
             && ./mvnw clean package -DskipTests -Dclassifier=${{ env.CLASSIFIER }}
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v3
         if: ${{ always() }}
         with:
           name: build-${{ matrix.arch }}-jars
           path: |
             **/target/*.jar
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v3
         if: ${{ failure() }}
         with:
           name: build-${{ matrix.arch }}-target
