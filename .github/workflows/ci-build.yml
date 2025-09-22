@@ -41,19 +41,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Initialize CentOS 7 Builder
+      - name: Add initialize script
         run: |
-          docker run -d \
-            --name centos7-builder \
-            -e CC=${{ env.CC }} \
-            -e CXX=${{ env.CXX }} \
-            -e AR=${{ env.AR }} \
-            -e STRIP=${{ env.STRIP }} \
-            -e CLASSIFIER=${{ env.CLASSIFIER }} \
-            -v $(pwd):/project \
-            centos:7
-          
-          cat > initialize.sh << EOF
+          cat > build.sh << EOF
           #!/bin/bash
           sed -i 's|^mirrorlist=|#mirrorlist=|g' /etc/yum.repos.d/CentOS-*.repo
           sed -i 's|^#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' \
@@ -74,20 +64,31 @@ jobs:
           yum clean all
           yum makecache -y
           EOF
-          
-          docker exec centos7-builder bash -c "$(cat initialize.sh)"
 
-      - name: Install cross toolchain (arm64 only)
+      - name: Add cross toolchain script (arm64 only)
         if: matrix.arch == 'aarch64'
         run: |
-          docker exec centos7-builder bash -c \
-            "yum -y install gcc-aarch64-linux-gnu gcc-c++-aarch64-linux-gnu"
+          echo "yum -y install gcc-aarch64-linux-gnu gcc-c++-aarch64-linux-gnu" \
+            >> build.sh
 
-
-      - name: Build netty-tcnative
+      - name: Add build script
         run: |
-          docker exec centos7-builder bash -c \
-            "chmod +x ./mvnw && ./mvnw clean package -DskipTests -Dclassifier=${{ env.CLASSIFIER }}"
+          echo "chmod +x ./mvnw" >> build.sh
+          echo "./mvnw clean package -DskipTests -Dclassifier=${{ env.CLASSIFIER }}" >> build.sh
+
+      - name: Build in Docker
+        run: |
+          docker run --rm \
+            --name centos7-builder \
+            -e CC=${{ env.CC }} \
+            -e CXX=${{ env.CXX }} \
+            -e AR=${{ env.AR }} \
+            -e STRIP=${{ env.STRIP }} \
+            -e CLASSIFIER=${{ env.CLASSIFIER }} \
+            -v $(pwd):/project \
+            -w /project \
+            centos:7 \
+            bash build.sh
 
       - uses: actions/upload-artifact@v4
         if: ${{ always() }}
