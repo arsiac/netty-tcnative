@@ -68,10 +68,10 @@ RUN set -x && \
   source /opt/rh/devtoolset-9/enable && \
   wget https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz && \
   tar xf openssl-${OPENSSL_VERSION}.tar.gz && \
-  pushed openssl-${OPENSSL_VERSION} && \
+  cd openssl-${OPENSSL_VERSION} && \
   ./Configure linux-x86_64 --prefix=/opt/openssl-${OPENSSL_VERSION}-share shared && \
   make -j$(nproc) && make install && \
-  popd
+  cd ..
 
 RUN rm -rf $SOURCE_DIR
 

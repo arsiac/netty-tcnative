@@ -59,23 +59,23 @@ ENV PATH="/gcc-arm-$GCC_VERSION-x86_64-aarch64-none-linux-gnu/bin:${PATH}"
 RUN set -x && \
   wget --no-check-certificate https://downloads.apache.org//apr/apr-$APR_VERSION.tar.gz && \
   tar xvf apr-$APR_VERSION.tar.gz && \
-  pushd apr-$APR_VERSION && \
+  cd apr-$APR_VERSION && \
   CC=aarch64-none-linux-gnu-gcc CFLAGS='-O3 -fno-omit-frame-pointer -fPIC' ./configure --prefix=/opt/apr-$APR_VERSION-share --host=aarch64-none-linux-gnu ac_cv_have_decl_sys_siglist=no ac_cv_file__dev_zero=yes ac_cv_func_setpgrp_void=yes apr_cv_tcp_nodelay_with_cork=yes ac_cv_sizeof_struct_iovec=8 && \
   make || true && \
-  pushd tools && \
+  cd tools && \
   gcc -Wall -O2 -DCROSS_COMPILE gen_test_char.c -s -o gen_test_char && \
-  popd && \
+  cd .. && \
   make && make install && \
-  popd
+  cd ..
 
 # Cross compile OpenSSL for aarch64 - share
 RUN set -x && \
   wget https://www.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz && \
   tar xvf openssl-$OPENSSL_VERSION.tar.gz && \
-  pushd openssl-$OPENSSL_VERSION && \
+  cd openssl-$OPENSSL_VERSION && \
   ./Configure linux-aarch64 --cross-compile-prefix=aarch64-none-linux-gnu- --prefix=/opt/openssl-$OPENSSL_VERSION-share shared && \
   make && make install && \
-  popd
+  cd ..
 
 # Install cmake
 RUN curl -s https://cmake.org/files/v$CMAKE_VERSION_BASE/cmake-$CMAKE_VERSION-linux-x86_64.tar.gz \
