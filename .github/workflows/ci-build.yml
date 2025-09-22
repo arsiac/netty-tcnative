@@ -49,7 +49,7 @@ jobs:
         with:
           name: build-jars
           path: |
-            **/target/*.jar
+            **/target/*-linux-*.jar
 
       - uses: actions/upload-artifact@v4
         if: ${{ failure() }}
@@ -97,7 +97,7 @@ jobs:
         with:
           name: build-windows-jars
           path: |
-            **/target/*.jar
+            **/target/*-windows-*.jar
 
       - uses: actions/upload-artifact@v4
         if: ${{ failure() }}
