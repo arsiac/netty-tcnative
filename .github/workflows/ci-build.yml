@@ -23,84 +23,46 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Linux
-  build-linux:
+  build:
     runs-on: ubuntu-24.04
     strategy:
-      fail-fast: false
       matrix:
-        arch: [x86_64, aarch64]
-    env:
-      CC:  ${{ matrix.arch == 'x86_64' && 'gcc'     || 'aarch64-linux-gnu-gcc' }}
-      CXX: ${{ matrix.arch == 'x86_64' && 'g++'     || 'aarch64-linux-gnu-g++' }}
-      AR:  ${{ matrix.arch == 'x86_64' && 'ar'      || 'aarch64-linux-gnu-ar' }}
-      STRIP: ${{ matrix.arch == 'x86_64' && 'strip' || 'aarch64-linux-gnu-strip' }}
-      CLASSIFIER: linux-${{ matrix.arch }}
+        include:
+          - setup: centos6-x86_64
+            docker-compose-build: "-f docker/docker-compose.centos-6.yaml -f docker/docker-compose.centos-6.18.yaml build"
+            docker-compose-run: "-f docker/docker-compose.centos-6.yaml -f docker/docker-compose.centos-6.18.yaml run build"
+          - setup: debian7-x86_64
+            docker-compose-build: "-f docker/docker-compose.debian.yaml -f docker/docker-compose.debian-7.18.yaml build"
+            docker-compose-run: "-f docker/docker-compose.debian.yaml -f docker/docker-compose.debian-7.18.yaml run build"
+          - setup: centos7-aarch64
+            docker-compose-build: "-f docker/docker-compose.centos-7.yaml build"
+            docker-compose-run: "-f docker/docker-compose.centos-7.yaml run cross-compile-aarch64-build"
+
+    name: ${{ matrix.setup }}
     steps:
+      - uses: actions/checkout@v4
 
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Add initialize script
-        run: |
-          cat > build.sh << EOF
-          #!/bin/bash
-          sed -i 's|^mirrorlist=|#mirrorlist=|g' /etc/yum.repos.d/CentOS-*.repo
-          sed -i 's|^#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' \
-            /etc/yum.repos.d/CentOS-*.repo
-          yum clean all
-          yum makecache -y
-          
-          yum -y groupinstall "Development Tools"
-          yum -y install epel-release
-          yum -y install apr-devel openssl-devel cmake3 ninja-build git which
-          yum -y install java-11-openjdk-devel
-          ln -sf /usr/bin/cmake3 /usr/bin/cmake
-          
-          yum -y install centos-release-scl-rh
-          sed -i 's|^mirrorlist=|#mirrorlist=|g' /etc/yum.repos.d/CentOS-SCLo-scl-rh.repo
-          sed -i 's|^#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' \
-            /etc/yum.repos.d/CentOS-SCLo-scl-rh.repo
-          yum clean all
-          yum makecache -y
-          EOF
-
-      - name: Add cross toolchain script (arm64 only)
-        if: matrix.arch == 'aarch64'
-        run: |
-          echo "yum -y install gcc-aarch64-linux-gnu gcc-c++-aarch64-linux-gnu" \
-            >> build.sh
-
-      - name: Add build script
-        run: |
-          echo "chmod +x ./mvnw" >> build.sh
-          echo "./mvnw clean package -DskipTests -Dclassifier=${{ env.CLASSIFIER }}" >> build.sh
-
-      - name: Build in Docker
-        run: |
-          docker run --rm \
-            --name centos7-builder \
-            -e CC=${{ env.CC }} \
-            -e CXX=${{ env.CXX }} \
-            -e AR=${{ env.AR }} \
-            -e STRIP=${{ env.STRIP }} \
-            -e CLASSIFIER=${{ env.CLASSIFIER }} \
-            -v $(pwd):/project \
-            -w /project \
-            centos:7 \
-            bash build.sh
-
-      - uses: actions/upload-artifact@v4
-        if: ${{ always() }}
+      # Enable caching of Docker layers
+      - uses: satackey/action-docker-layer-caching@v0.0.11
+        continue-on-error: true
         with:
-          name: build-${{ matrix.arch }}-jars
-          path: |
-            **/target/*.jar
+          key: build-${{ matrix.setup }}-docker-cache-{hash}
+          restore-keys: |
+            build-${{ matrix.setup }}-docker-cache-
+
+      - name: Build docker image
+        run: docker-compose ${{ matrix.docker-compose-build }}
+
+      - name: Build project
+        run: docker-compose ${{ matrix.docker-compose-run }} | tee build.output
+
+      - name: Checking for test failures
+        run: ./.github/scripts/check_build_result.sh build.output
 
       - uses: actions/upload-artifact@v4
         if: ${{ failure() }}
         with:
-          name: build-${{ matrix.arch }}-target
+          name: build-${{ matrix.setup }}-target
           path: |
             **/target/surefire-reports/
             **/hs_err*.log
