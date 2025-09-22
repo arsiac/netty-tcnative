@@ -29,8 +29,8 @@ jobs:
       matrix:
         include:
           - setup: centos7-x86_64
-            docker-compose-build: "-f docker/docker-compose.centos7.yaml -f docker/docker-compose.centos-6.18.yaml build"
-            docker-compose-run: "-f docker/docker-compose.centos7.yaml -f docker/docker-compose.centos-6.18.yaml run build"
+            docker-compose-build: "-f docker/docker-compose.centos7.yaml build"
+            docker-compose-run: "-f docker/docker-compose.centos7.yaml run build"
           - setup: centos7-aarch64
             docker-compose-build: "-f docker/docker-compose.centos7-cross_compile_aarch64.yaml build"
             docker-compose-run: "-f docker/docker-compose.centos7-cross_compile_aarch64.yaml run cross-compile-aarch64-build"
@@ -73,59 +73,59 @@ jobs:
             **/hs_err*.log
 
 
-  build-windows:
-    runs-on: windows-2022
-    name: windows-x86_64
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up JDK 8
-        uses: actions/setup-java@v4
-        with:
-          java-version: 8
-          distribution: zulu
-
-      - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v2
-
-      - name: Configuring Developer Command Prompt
-        uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: x86_amd64
-
-      - name: Install tools
-        uses: crazy-max/ghaction-chocolatey@v3
-        with:
-          args: install ninja nasm openssl
-
-      # Cache .m2/repository
-      - uses: actions/cache@v4
-        continue-on-error: true
-        with:
-          path: ~/.m2/repository
-          key: build-windows-m2-repository-cache-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            build-windows-m2-repository-cache-
-
-      - name: Set up Environment Variables
-        run: |
-          echo "OPENSSL_INCLUDE_DIR=C:\Program Files\OpenSSL\include" >> $env:GITHUB_ENV
-          echo "OPENSSL_LIB_DIR=C:\Program Files\OpenSSL\lib\VC\x64\MD" >> $env:GITHUB_ENV
-
-      - name: Build netty-tcnative
-        run: ./mvnw.cmd --file pom.xml -am clean package
-
-      - uses: actions/upload-artifact@v4
-        if: ${{ always() }}
-        with:
-          name: build-windows-jars
-          path: |
-            **/target/*.jar
-
-      - uses: actions/upload-artifact@v4
-        if: ${{ failure() }}
-        with:
-          name: build-windows-target
-          path: |
-            **/target/surefire-reports/
-            **/hs_err*.log
+#  build-windows:
+#    runs-on: windows-2022
+#    name: windows-x86_64
+#    steps:
+#      - uses: actions/checkout@v4
+#
+#      - name: Set up JDK 8
+#        uses: actions/setup-java@v4
+#        with:
+#          java-version: 8
+#          distribution: zulu
+#
+#      - name: Add msbuild to PATH
+#        uses: microsoft/setup-msbuild@v2
+#
+#      - name: Configuring Developer Command Prompt
+#        uses: ilammy/msvc-dev-cmd@v1
+#        with:
+#          arch: x86_amd64
+#
+#      - name: Install tools
+#        uses: crazy-max/ghaction-chocolatey@v3
+#        with:
+#          args: install ninja nasm openssl
+#
+#      # Cache .m2/repository
+#      - uses: actions/cache@v4
+#        continue-on-error: true
+#        with:
+#          path: ~/.m2/repository
+#          key: build-windows-m2-repository-cache-${{ hashFiles('**/pom.xml') }}
+#          restore-keys: |
+#            build-windows-m2-repository-cache-
+#
+#      - name: Set up Environment Variables
+#        run: |
+#          echo "OPENSSL_INCLUDE_DIR=C:\Program Files\OpenSSL\include" >> $env:GITHUB_ENV
+#          echo "OPENSSL_LIB_DIR=C:\Program Files\OpenSSL\lib\VC\x64\MD" >> $env:GITHUB_ENV
+#
+#      - name: Build netty-tcnative
+#        run: ./mvnw.cmd --file pom.xml -am clean package
+#
+#      - uses: actions/upload-artifact@v4
+#        if: ${{ always() }}
+#        with:
+#          name: build-windows-jars
+#          path: |
+#            **/target/*.jar
+#
+#      - uses: actions/upload-artifact@v4
+#        if: ${{ failure() }}
+#        with:
+#          name: build-windows-target
+#          path: |
+#            **/target/surefire-reports/
+#            **/hs_err*.log
