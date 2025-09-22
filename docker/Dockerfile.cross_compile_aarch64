@@ -51,7 +51,7 @@ RUN set -x && \
 
 # Cross compile OpenSSL for aarch64 - share
 RUN set -x && \
-  wget https://www.openssl.org/source/openssl-$$OPENSSL_VERSION.tar.gz && \
+  wget https://www.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz && \
   tar xvf openssl-$OPENSSL_VERSION.tar.gz && \
   pushd openssl-$OPENSSL_VERSION && \
   ./Configure linux-aarch64 --cross-compile-prefix=aarch64-none-linux-gnu- --prefix=/opt/openssl-$OPENSSL_VERSION-share shared && \
