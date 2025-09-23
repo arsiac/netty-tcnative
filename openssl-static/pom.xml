@@ -120,11 +120,11 @@
                   <globmapper from="libnetty_tcnative.*" to="libnetty_tcnative_${os.detected.name}_${jniArch}.*" />
                 </move>
                 <move todir="${nativeJarWorkdir}/META-INF/native/" flatten="true">
-                  <fileset dir="${opensslHome}/lib/" />
+                  <fileset dir="${opensslHome}/lib64/" />
                   <globmapper from="libssl.*" to="libssl.*" />
                 </move>
                 <move todir="${nativeJarWorkdir}/META-INF/native/" flatten="true">
-                  <fileset dir="${opensslHome}/lib/" />
+                  <fileset dir="${opensslHome}/lib64/" />
                   <globmapper from="libcrypto.*" to="libcrypto.*" />
                 </move>
                 <!-- windows-->
