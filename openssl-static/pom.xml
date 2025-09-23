@@ -198,6 +198,7 @@
                 <configureArg>--with-ssl=${opensslHome}</configureArg>
                 <configureArg>--with-static-libs</configureArg>
                 <configureArg>--libdir=${project.build.directory}/native-build/target/lib</configureArg>
+                <configureArg>LDFLAGS="-Wl,-Bstatic -L${opensslHome}/lib -lssl -lcrypto -Wl,-Bdynamic -ldl -pthread"</configureArg>
               </configureArgs>
             </configuration>
           </execution>
@@ -250,6 +251,7 @@
                     <configureArg>--with-ssl=${opensslHome}</configureArg>
                     <configureArg>--with-static-libs</configureArg>
                     <configureArg>--libdir=${project.build.directory}/native-build/target/lib</configureArg>
+                    <configureArg>LDFLAGS="-Wl,-Bstatic -L${opensslHome}/lib -lssl -lcrypto -Wl,-Bdynamic -ldl -pthread"</configureArg>
                   </configureArgs>
                 </configuration>
               </execution>
