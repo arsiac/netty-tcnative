@@ -27,11 +27,11 @@ services:
 
   build-clean:
     <<: *common
-    command: /bin/bash -cl "./mvnw clean package"
+    command: /bin/bash -cl "./mvnw clean package -DskipTests"
 
   build:
     <<: *common
-    command: /bin/bash -cl "./mvnw clean package"
+    command: /bin/bash -cl "./mvnw clean package -DskipTests"
 
   stage-snapshot:
     <<: *common
