@@ -156,38 +156,6 @@
           </execution>
         </executions>
       </plugin>
-
-      <!-- Configure the distribution statically linked against OpenSSL-->
-      <plugin>
-        <groupId>org.fusesource.hawtjni</groupId>
-        <artifactId>hawtjni-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>build-native-lib</id>
-            <goals>
-              <goal>generate</goal>
-              <goal>build</goal>
-            </goals>
-            <phase>compile</phase>
-            <configuration>
-              <name>netty_tcnative</name>
-              <nativeSourceDirectory>${generatedSourcesDir}/c</nativeSourceDirectory>
-              <customPackageDirectory>${generatedSourcesDir}/native-package</customPackageDirectory>
-              <libDirectory>${nativeLibOnlyDir}</libDirectory>
-              <forceAutogen>${forceAutogen}</forceAutogen>
-              <forceConfigure>${forceConfigure}</forceConfigure>
-              <windowsBuildTool>msbuild</windowsBuildTool>
-              <configureArgs>
-                <configureArg>${macOsxDeploymentTarget}</configureArg>
-                <configureArg>--with-ssl=${opensslHome}</configureArg>
-                <configureArg>--with-static-libs</configureArg>
-                <configureArg>--libdir=${project.build.directory}/native-build/target/lib</configureArg>
-                <configureArg>LDFLAGS=-Wl,-Bstatic -L${opensslHome}/lib -lssl -lcrypto -Wl,-Bdynamic -ldl -pthread</configureArg>
-              </configureArgs>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
     </plugins>
   </build>
 
@@ -231,6 +199,7 @@
                   <forceConfigure>${forceConfigure}</forceConfigure>
                   <windowsBuildTool>msbuild</windowsBuildTool>
                   <configureArgs>
+                    <configureArg>--host=aarch64-none-linux-gnu</configureArg>
                     <configureArg>--with-ssl=${opensslHome}</configureArg>
                     <configureArg>--with-static-libs</configureArg>
                     <configureArg>--libdir=${project.build.directory}/native-build/target/lib</configureArg>
@@ -244,124 +213,44 @@
       </build>
     </profile>
     <profile>
-      <id>build-openssl-windows</id>
+      <id>build-openssl-linux-x86_64</id>
       <activation>
         <os>
-          <family>windows</family>
+          <family>linux</family>
+          <arch>x86_64</arch>
         </os>
       </activation>
       <build>
         <plugins>
           <plugin>
-            <artifactId>maven-antrun-plugin</artifactId>
+            <groupId>org.fusesource.hawtjni</groupId>
+            <artifactId>hawtjni-maven-plugin</artifactId>
             <executions>
               <execution>
-                <id>source-openssl</id>
-                <phase>generate-sources</phase>
+                <id>build-native-lib</id>
                 <goals>
-                  <goal>run</goal>
+                  <goal>generate</goal>
+                  <goal>build</goal>
                 </goals>
-                <configuration>
-                  <target>
-                    <!-- Add the ant tasks from ant-contrib -->
-                    <taskdef resource="net/sf/antcontrib/antcontrib.properties" />
-
-                    <if>
-                      <available file="${opensslSourceDir}" />
-                      <then>
-                        <echo message="OpenSSL was already downloaded, skipping the build step." />
-                      </then>
-                      <else>
-                        <echo message="Downloading OpenSSL" />
-
-                        <condition property="opensslFound"> 
-                          <http url="https://www.openssl.org/source/openssl-${opensslVersion}.tar.gz" /> 
-                        </condition> 
-                         <if>
-                          <equals arg1="${opensslFound}" arg2="true" />
-                          <then>
-                            <!-- Download the openssl source. -->
-                            <get src="https://www.openssl.org/source/openssl-${opensslVersion}.tar.gz" dest="${project.build.directory}/openssl-${opensslVersion}.tar.gz" verbose="on" />
-                          </then>
-                          <else>
-                           <!-- Download the openssl source from the old directory -->
-                            <get src="https://www.openssl.org/source/old/${opensslMinorVersion}/openssl-${opensslVersion}.tar.gz" dest="${project.build.directory}/openssl-${opensslVersion}.tar.gz" verbose="on" />
-                          </else>
-                        </if>
-                        <checksum file="${project.build.directory}/openssl-${opensslVersion}.tar.gz" algorithm="SHA-256" property="${opensslSha256}" verifyProperty="isEqual" />
-
-                        <gunzip src="${project.build.directory}/openssl-${opensslVersion}.tar.gz" dest="${project.build.directory}/" />
-                        <untar src="${project.build.directory}/openssl-${opensslVersion}.tar" dest="${project.build.directory}/" />
-                        <move file="${project.build.directory}/openssl-${opensslVersion}" tofile="${opensslSourceDir}" />
-                      </else>
-                    </if>
-                  </target>
-                </configuration>
-              </execution>
-
-              <execution>
-                <id>build-openssl</id>
                 <phase>compile</phase>
-                <goals>
-                  <goal>run</goal>
-                </goals>
                 <configuration>
-                  <target>
-                    <!-- Add the ant tasks from ant-contrib -->
-                    <taskdef resource="net/sf/antcontrib/antcontrib.properties" />
-
-                    <if>
-                      <available file="${opensslHome}" />
-                      <then>
-                        <echo message="OpenSSL was already build, skipping the build step." />
-                      </then>
-                      <else>
-                        <echo message="Building OpenSSL" />
-
-                        <!-- Build for the correct platform -->
-                        <pathconvert property="sslHomePath" targetos="windows">
-                          <path location="${opensslHome}" />
-                        </pathconvert>
-                        <if>
-                          <equals arg1="${archBits}" arg2="32" />
-                          <then>
-                            <echo message="Building OpenSSL for Win32" />
-                            <exec executable="perl" failonerror="true" dir="${opensslSourceDir}" resolveexecutable="true">
-                              <arg line="Configure VC-WIN32 --prefix=${sslHomePath}" />
-                            </exec>
-                            <exec executable="nmake" failonerror="true" dir="${opensslSourceDir}" resolveexecutable="true">
-                              <arg line="install" />
-                            </exec>
-                          </then>
-                          <else>
-                            <echo message="Building OpenSSL for Win64" />
-                            <exec executable="perl" failonerror="true" dir="${opensslSourceDir}" resolveexecutable="true">
-                              <arg line="Configure VC-WIN64A --prefix=${sslHome}" />
-                            </exec>
-                            <exec executable="nmake" failonerror="true" dir="${opensslSourceDir}" resolveexecutable="true">
-                              <arg line="install" />
-                            </exec>
-                          </else>
-                        </if>
-                      </else>
-                    </if>
-                  </target>
+                  <name>netty_tcnative</name>
+                  <nativeSourceDirectory>${generatedSourcesDir}/c</nativeSourceDirectory>
+                  <customPackageDirectory>${generatedSourcesDir}/native-package</customPackageDirectory>
+                  <libDirectory>${nativeLibOnlyDir}</libDirectory>
+                  <forceAutogen>${forceAutogen}</forceAutogen>
+                  <forceConfigure>${forceConfigure}</forceConfigure>
+                  <windowsBuildTool>msbuild</windowsBuildTool>
+                  <configureArgs>
+                    <configureArg>--with-ssl=${opensslHome}</configureArg>
+                    <configureArg>--with-static-libs</configureArg>
+                    <configureArg>--libdir=${project.build.directory}/native-build/target/lib</configureArg>
+                    <configureArg>LDFLAGS=-Wl,-Bstatic -L${opensslHome}/lib -lssl -lcrypto -Wl,-Bdynamic -ldl -pthread</configureArg>
+                  </configureArgs>
                 </configuration>
               </execution>
             </executions>
           </plugin>
-        </plugins>
-      </build>
-    </profile>
-    <profile>
-      <id>build-openssl-linux</id>
-      <activation>
-        <os>
-          <family>linux</family>
-        </os>
-      </activation>
-      <build>
-        <plugins>
           <plugin>
             <artifactId>maven-antrun-plugin</artifactId>
             <executions>
@@ -441,6 +330,116 @@
                           <!-- Don't install manpages to make things as fast a possible -->
                           <arg value="install_sw" />
                         </exec>
+                      </else>
+                    </if>
+                  </target>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>build-openssl-windows</id>
+      <activation>
+        <os>
+          <family>windows</family>
+        </os>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>source-openssl</id>
+                <phase>generate-sources</phase>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+                <configuration>
+                  <target>
+                    <!-- Add the ant tasks from ant-contrib -->
+                    <taskdef resource="net/sf/antcontrib/antcontrib.properties" />
+
+                    <if>
+                      <available file="${opensslSourceDir}" />
+                      <then>
+                        <echo message="OpenSSL was already downloaded, skipping the build step." />
+                      </then>
+                      <else>
+                        <echo message="Downloading OpenSSL" />
+
+                        <condition property="opensslFound">
+                          <http url="https://www.openssl.org/source/openssl-${opensslVersion}.tar.gz" />
+                        </condition>
+                        <if>
+                          <equals arg1="${opensslFound}" arg2="true" />
+                          <then>
+                            <!-- Download the openssl source. -->
+                            <get src="https://www.openssl.org/source/openssl-${opensslVersion}.tar.gz" dest="${project.build.directory}/openssl-${opensslVersion}.tar.gz" verbose="on" />
+                          </then>
+                          <else>
+                            <!-- Download the openssl source from the old directory -->
+                            <get src="https://www.openssl.org/source/old/${opensslMinorVersion}/openssl-${opensslVersion}.tar.gz" dest="${project.build.directory}/openssl-${opensslVersion}.tar.gz" verbose="on" />
+                          </else>
+                        </if>
+                        <checksum file="${project.build.directory}/openssl-${opensslVersion}.tar.gz" algorithm="SHA-256" property="${opensslSha256}" verifyProperty="isEqual" />
+
+                        <gunzip src="${project.build.directory}/openssl-${opensslVersion}.tar.gz" dest="${project.build.directory}/" />
+                        <untar src="${project.build.directory}/openssl-${opensslVersion}.tar" dest="${project.build.directory}/" />
+                        <move file="${project.build.directory}/openssl-${opensslVersion}" tofile="${opensslSourceDir}" />
+                      </else>
+                    </if>
+                  </target>
+                </configuration>
+              </execution>
+
+              <execution>
+                <id>build-openssl</id>
+                <phase>compile</phase>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+                <configuration>
+                  <target>
+                    <!-- Add the ant tasks from ant-contrib -->
+                    <taskdef resource="net/sf/antcontrib/antcontrib.properties" />
+
+                    <if>
+                      <available file="${opensslHome}" />
+                      <then>
+                        <echo message="OpenSSL was already build, skipping the build step." />
+                      </then>
+                      <else>
+                        <echo message="Building OpenSSL" />
+
+                        <!-- Build for the correct platform -->
+                        <pathconvert property="sslHomePath" targetos="windows">
+                          <path location="${opensslHome}" />
+                        </pathconvert>
+                        <if>
+                          <equals arg1="${archBits}" arg2="32" />
+                          <then>
+                            <echo message="Building OpenSSL for Win32" />
+                            <exec executable="perl" failonerror="true" dir="${opensslSourceDir}" resolveexecutable="true">
+                              <arg line="Configure VC-WIN32 --prefix=${sslHomePath}" />
+                            </exec>
+                            <exec executable="nmake" failonerror="true" dir="${opensslSourceDir}" resolveexecutable="true">
+                              <arg line="install" />
+                            </exec>
+                          </then>
+                          <else>
+                            <echo message="Building OpenSSL for Win64" />
+                            <exec executable="perl" failonerror="true" dir="${opensslSourceDir}" resolveexecutable="true">
+                              <arg line="Configure VC-WIN64A --prefix=${sslHome}" />
+                            </exec>
+                            <exec executable="nmake" failonerror="true" dir="${opensslSourceDir}" resolveexecutable="true">
+                              <arg line="install" />
+                            </exec>
+                          </else>
+                        </if>
                       </else>
                     </if>
                   </target>
