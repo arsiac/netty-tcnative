@@ -119,10 +119,20 @@
                   <fileset dir="${nativeJarWorkdir}/META-INF/native/" />
                   <globmapper from="libnetty_tcnative.*" to="libnetty_tcnative_${os.detected.name}_${jniArch}.*" />
                 </move>
+                <move todir="${nativeJarWorkdir}/META-INF/native/" flatten="true">
+                  <fileset dir="${opensslHome}/lib/" />
+                  <globmapper from="libssl.*" to="libssl.*" />
+                  <globmapper from="libcrypto.*" to="libcrypto.*" />
+                </move>
                 <!-- windows-->
                 <move todir="${nativeJarWorkdir}/META-INF/native/" flatten="true">
                   <fileset dir="${nativeJarWorkdir}/META-INF/native/" />
                   <globmapper from="netty_tcnative.*" to="netty_tcnative_${os.detected.name}_${jniArch}.*" />
+                </move>
+                <move todir="${nativeJarWorkdir}/META-INF/native/" flatten="true">
+                  <fileset dir="${opensslHome}/bin/" />
+                  <globmapper from="libssl*.dll" to="libssl*.dll" />
+                  <globmapper from="libcrypto*.dll" to="libcrypto*.dll" />
                 </move>
 
                 <!-- Append the Bundle-NativeCode section -->
