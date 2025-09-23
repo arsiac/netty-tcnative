@@ -56,11 +56,6 @@ RUN set -x && \
   mv gcc-arm-$GCC_VERSION-x86_64-aarch64-none-linux-gnu /
 ENV PATH="/gcc-arm-$GCC_VERSION-x86_64-aarch64-none-linux-gnu/bin:${PATH}"
 
-ENV CC='aarch64-none-linux-gnu-gcc'
-ENV CXX='aarch64-none-linux-gnu-g++'
-ENV AR='aarch64-none-linux-gnu-ar'
-ENV STRIP='aarch64-none-linux-gnu-strip'
-
 # Cross compile Apache Apr for aarch64 - share
 RUN set -x && \
   wget --no-check-certificate https://downloads.apache.org//apr/apr-$APR_VERSION.tar.gz && \
@@ -104,6 +99,11 @@ RUN bash -c "source $HOME/.sdkman/bin/sdkman-init.sh && \
 
 # Prepare our own build
 ENV PATH /root/.sdkman/candidates/maven/current:$PATH
+
+ENV CC='aarch64-none-linux-gnu-gcc'
+ENV CXX='aarch64-none-linux-gnu-g++'
+ENV AR='aarch64-none-linux-gnu-ar'
+ENV STRIP='aarch64-none-linux-gnu-strip'
 
 # Cleanup
 RUN rm -rf $SOURCE_DIR
