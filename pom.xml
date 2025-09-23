@@ -586,7 +586,7 @@
       <modules>
         <module>openssl-classes</module>
         <module>openssl-dynamic</module>
-        <module>openssl-static</module>
+        <!-- <module>openssl-static</module> -->
       </modules>
     </profile>
 
