@@ -140,6 +140,7 @@
               <forceAutogen>${forceAutogen}</forceAutogen>
               <forceConfigure>${forceConfigure}</forceConfigure>
               <configureArgs>
+                <configureArg>--with-ssl=/opt/openssl-${opensslVersion}-share</configureArg>
                 <configureArg>--libdir=${project.build.directory}/native-build/target/lib</configureArg>
               </configureArgs>
               <windowsBuildTool>msbuild</windowsBuildTool>
