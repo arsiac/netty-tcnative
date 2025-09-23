@@ -76,7 +76,8 @@ RUN set -x && \
   cd openssl-$OPENSSL_VERSION && \
   ./Configure linux-aarch64 --cross-compile-prefix=aarch64-none-linux-gnu- --prefix=/opt/openssl-$OPENSSL_VERSION-share shared && \
   make && make install && \
-  cd ..
+  cd .. && \
+  ln -sf /opt/openssl-${OPENSSL_VERSION}-share/lib64 /opt/openssl-${OPENSSL_VERSION}-share/lib
 
 # Install cmake
 RUN curl -s https://cmake.org/files/v$CMAKE_VERSION_BASE/cmake-$CMAKE_VERSION-linux-x86_64.tar.gz \

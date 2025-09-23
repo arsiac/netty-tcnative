@@ -72,7 +72,9 @@ RUN set -x && \
   cd openssl-${OPENSSL_VERSION} && \
   ./Configure linux-x86_64 --prefix=/opt/openssl-${OPENSSL_VERSION}-share shared && \
   make -j$(nproc) && make install && \
-  cd ..
+  cd .. && \
+  ln -sf /opt/openssl-${OPENSSL_VERSION}-share/lib64 /opt/openssl-${OPENSSL_VERSION}-share/lib
+
 
 RUN rm -rf $SOURCE_DIR
 
