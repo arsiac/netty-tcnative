@@ -51,7 +51,7 @@ ENV JAVA_HOME="/usr/lib/jvm/java-1.8.0-openjdk/"
 
 RUN yum -y install centos-release-scl-rh
 # Update repository urls as we need to use the vault now.
-RUN sed -i 's|^mirrorlist=|#mirrorlist=|g' \
+RUN sed -i -e 's|^mirrorlist=|#mirrorlist=|g' \
         -e 's|^#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' \
     /etc/yum.repos.d/CentOS-SCLo-scl-rh.repo
 
