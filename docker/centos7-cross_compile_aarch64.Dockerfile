@@ -104,6 +104,7 @@ ENV CC='aarch64-none-linux-gnu-gcc'
 ENV CXX='aarch64-none-linux-gnu-g++'
 ENV AR='aarch64-none-linux-gnu-ar'
 ENV STRIP='aarch64-none-linux-gnu-strip'
+ENV LD='aarch64-none-linux-gnu-ld'
 
 # Cleanup
 RUN rm -rf $SOURCE_DIR

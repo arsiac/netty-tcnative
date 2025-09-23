@@ -200,6 +200,49 @@
 
   <profiles>
     <profile>
+      <id>build-native-linux-aarch64</id>
+      <activation>
+        <os>
+          <family>linux</family>
+          <arch>aarch64</arch>
+        </os>
+      </activation>
+      <build>
+        <plugins>
+          <!-- Configure the distribution statically linked against OpenSSL for aarch64-->
+          <plugin>
+            <groupId>org.fusesource.hawtjni</groupId>
+            <artifactId>hawtjni-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>build-native-lib</id>
+                <goals>
+                  <goal>generate</goal>
+                  <goal>build</goal>
+                </goals>
+                <phase>compile</phase>
+                <configuration>
+                  <name>netty_tcnative</name>
+                  <nativeSourceDirectory>${generatedSourcesDir}/c</nativeSourceDirectory>
+                  <customPackageDirectory>${generatedSourcesDir}/native-package</customPackageDirectory>
+                  <libDirectory>${nativeLibOnlyDir}</libDirectory>
+                  <forceAutogen>${forceAutogen}</forceAutogen>
+                  <forceConfigure>${forceConfigure}</forceConfigure>
+                  <windowsBuildTool>msbuild</windowsBuildTool>
+                  <configureArgs>
+                    <configureArg>--host=aarch64-none-linux-gnu</configureArg>
+                    <configureArg>--with-ssl=${opensslHome}</configureArg>
+                    <configureArg>--with-static-libs</configureArg>
+                    <configureArg>--libdir=${project.build.directory}/native-build/target/lib</configureArg>
+                  </configureArgs>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
       <id>build-openssl-windows</id>
       <activation>
         <os>
