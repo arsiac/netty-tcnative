@@ -15,12 +15,9 @@ RUN mkdir $SOURCE_DIR
 WORKDIR $SOURCE_DIR
 
 # Update to use the vault
-RUN sed -i -e 's/^mirrorlist/#mirrorlist/g' \
-    -e 's/^#baseurl=http:\/\/mirror.centos.org\/centos\/$releasever\//baseurl=https:\/\/linuxsoft.cern.ch\/centos-vault\/\/7.6.1810\//g' \
-    /etc/yum.repos.d/CentOS-Base.repo
-
-# We want to have git 2.x for the maven scm plugin and also for boringssl
-RUN yum install -y http://opensource.wandisco.com/centos/6/git/x86_64/wandisco-git-release-6-1.noarch.rpm
+RUN sed -i -e 's|^mirrorlist=|#mirrorlist=|g' \
+        -e 's|^#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' \
+        /etc/yum.repos.d/CentOS-*.repo
 
 # Install requirements
 RUN  set -x && \
@@ -106,6 +103,7 @@ ENV CXX='aarch64-none-linux-gnu-g++'
 ENV AR='aarch64-none-linux-gnu-ar'
 ENV STRIP='aarch64-none-linux-gnu-strip'
 ENV LD='aarch64-none-linux-gnu-ld'
+ENV HOST='aarch64-none-linux-gnu'
 
 # Cleanup
 RUN rm -rf $SOURCE_DIR

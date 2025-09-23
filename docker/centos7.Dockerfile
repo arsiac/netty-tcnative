@@ -11,9 +11,9 @@ ENV GO_VERSION 1.9.3
 ENV MAVEN_VERSION 3.9.1
 
 # Update to use the vault
-RUN sed -i -e 's/^mirrorlist/#mirrorlist/g' \
-    -e 's/^#baseurl=http:\/\/mirror.centos.org\/centos\/$releasever\//baseurl=https:\/\/linuxsoft.cern.ch\/centos-vault\/\/7.6.1810\//g' \
-    /etc/yum.repos.d/CentOS-Base.repo
+RUN sed -i -e 's|^mirrorlist=|#mirrorlist=|g' \
+        -e 's|^#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' \
+        /etc/yum.repos.d/CentOS-*.repo
 
 # install dependencies
 RUN yum install -y \
@@ -49,17 +49,11 @@ WORKDIR $SOURCE_DIR
 RUN yum install -y java-1.8.0-openjdk-devel golang
 ENV JAVA_HOME="/usr/lib/jvm/java-1.8.0-openjdk/"
 
-# Install cmake
-RUN curl -s https://cmake.org/files/v$CMAKE_VERSION_BASE/cmake-$CMAKE_VERSION-linux-x86_64.tar.gz \
-    --output cmake-$CMAKE_VERSION-linux-x86_64.tar.gz \
-    && tar zvxf cmake-$CMAKE_VERSION-linux-x86_64.tar.gz \
-    && mv cmake-$CMAKE_VERSION-linux-x86_64 /opt/ \
-    && echo 'PATH=/opt/cmake-$CMAKE_VERSION-linux-x86_64/bin:$PATH' >> ~/.bashrc
-
 RUN yum -y install centos-release-scl-rh
 # Update repository urls as we need to use the vault now.
-RUN sed -i 's|^mirrorlist=|#mirrorlist=|g' /etc/yum.repos.d/CentOS-SCLo-scl-rh.repo
-RUN sed -i 's|^#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-SCLo-scl-rh.repo
+RUN sed -i 's|^mirrorlist=|#mirrorlist=|g' \
+        -e 's|^#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' \
+    /etc/yum.repos.d/CentOS-SCLo-scl-rh.repo
 
 RUN yum -y install devtoolset-9-gcc devtoolset-9-gcc-c++
 RUN echo 'source /opt/rh/devtoolset-9/enable' >> ~/.bashrc

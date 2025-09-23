@@ -231,7 +231,6 @@
                   <forceConfigure>${forceConfigure}</forceConfigure>
                   <windowsBuildTool>msbuild</windowsBuildTool>
                   <configureArgs>
-                    <configureArg>--host=aarch64-none-linux-gnu</configureArg>
                     <configureArg>--with-ssl=${opensslHome}</configureArg>
                     <configureArg>--with-static-libs</configureArg>
                     <configureArg>--libdir=${project.build.directory}/native-build/target/lib</configureArg>
