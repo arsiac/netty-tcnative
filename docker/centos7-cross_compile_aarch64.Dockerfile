@@ -56,12 +56,17 @@ RUN set -x && \
   mv gcc-arm-$GCC_VERSION-x86_64-aarch64-none-linux-gnu /
 ENV PATH="/gcc-arm-$GCC_VERSION-x86_64-aarch64-none-linux-gnu/bin:${PATH}"
 
+ENV CC='aarch64-none-linux-gnu-gcc'
+ENV CXX='aarch64-none-linux-gnu-g++'
+ENV AR='aarch64-none-linux-gnu-ar'
+ENV STRIP='aarch64-none-linux-gnu-strip'
+
 # Cross compile Apache Apr for aarch64 - share
 RUN set -x && \
   wget --no-check-certificate https://downloads.apache.org//apr/apr-$APR_VERSION.tar.gz && \
   tar xvf apr-$APR_VERSION.tar.gz && \
   cd apr-$APR_VERSION && \
-  CC=aarch64-none-linux-gnu-gcc CFLAGS='-O3 -fno-omit-frame-pointer -fPIC' ./configure --prefix=/opt/apr-$APR_VERSION-share --host=aarch64-none-linux-gnu ac_cv_have_decl_sys_siglist=no ac_cv_file__dev_zero=yes ac_cv_func_setpgrp_void=yes apr_cv_tcp_nodelay_with_cork=yes ac_cv_sizeof_struct_iovec=8 && \
+  CFLAGS='-O3 -fno-omit-frame-pointer -fPIC' ./configure --prefix=/opt/apr-$APR_VERSION-share --host=aarch64-none-linux-gnu ac_cv_have_decl_sys_siglist=no ac_cv_file__dev_zero=yes ac_cv_func_setpgrp_void=yes apr_cv_tcp_nodelay_with_cork=yes ac_cv_sizeof_struct_iovec=8 && \
   make || true && \
   cd tools && \
   gcc -Wall -O2 -DCROSS_COMPILE gen_test_char.c -s -o gen_test_char && \
