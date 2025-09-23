@@ -118,7 +118,7 @@ jobs:
 #          echo "OPENSSL_LIB_DIR=C:\Program Files\OpenSSL\lib\VC\x64\MD" >> $env:GITHUB_ENV
 #
 #      - name: Build netty-tcnative
-#        run: ./mvnw.cmd --file pom.xml -am clean package
+#        run: ./mvnw.cmd --file pom.xml clean package
 #
 #      - uses: actions/upload-artifact@v4
 #        if: ${{ always() }}

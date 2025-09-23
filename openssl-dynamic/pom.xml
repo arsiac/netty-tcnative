@@ -140,7 +140,7 @@
               <forceAutogen>${forceAutogen}</forceAutogen>
               <forceConfigure>${forceConfigure}</forceConfigure>
               <configureArgs>
-                <configureArg>--with-ssl=/opt/openssl-${opensslVersion}-share</configureArg>
+                <configureArg>--with-ssl=${opensslHome}</configureArg>
                 <configureArg>--libdir=${project.build.directory}/native-build/target/lib</configureArg>
               </configureArgs>
               <windowsBuildTool>msbuild</windowsBuildTool>
@@ -350,8 +350,8 @@
                       <content>release 7.6</content>
                     </requireFilesContent>
                     <requireProperty>
-                      <property>opensslArmHome</property>
-                      <message>The folder of OpenSSL for aarch64 must be specified by hand. Please try -DopensslArmHome=</message>
+                      <property>opensslHome</property>
+                      <message>The folder of OpenSSL for aarch64 must be specified by hand. Please try -DopensslHome=</message>
                     </requireProperty>
                   </rules>
                   <ignoreCache>true</ignoreCache>
@@ -375,7 +375,7 @@
                   <forceConfigure>${forceConfigure}</forceConfigure>
                   <configureArgs>
                     <configureArg>--libdir=${project.build.directory}/native-build/target/lib</configureArg>
-                    <configureArg>--with-ssl=${opensslArmHome}</configureArg>
+                    <configureArg>--with-ssl=${opensslHome}</configureArg>
                     <configureArg>--host=aarch64-linux-gnu</configureArg>
                     <configureArg>CC=aarch64-none-linux-gnu-gcc</configureArg>
                     <configureArg>CXX=aarch64-none-linux-gnu-g++</configureArg>
